@@ -37,8 +37,8 @@ pub trait GetSlice {
 }
 
 fn bound<T: AsOption<usize>, U: RangeArgument<T>>(len: usize, a: U) -> Range<usize> {
-    let start = cmp::min(a.start().map(|x| x.as_option()).unwrap_or(Some(0)).unwrap(), len);
-    let end = cmp::min(a.end().map(|x| x.as_option()).unwrap_or(Some(len)).unwrap(), len);
+    let start = cmp::min(a.start().and_then(|x| x.as_option()).unwrap_or(0), len);
+    let end = cmp::min(a.end().and_then(|x| x.as_option()).unwrap_or(len), len);
 
     if start <= end {
         start..end
@@ -66,5 +66,27 @@ impl<T> GetSlice for [T] {
     fn get_slice_mut<U: AsOption<usize>, V: RangeArgument<U>>(&mut self, a: V) -> &mut Self {
         let len = self.len();
         &mut self[bound(len, a)]
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_get_slice() {
+        let arr = [1, 2, 3];
+        assert_eq!(arr.get_slice(1..42), &[2, 3]);
+        assert_eq!(arr.get_slice(20..42), &[]);
+        assert_eq!(arr.get_slice(0..), &arr);
+        assert_eq!(arr.get_slice::<usize, _>(..), &arr);
+        assert_eq!(arr.get_slice(..42), &arr);
+        assert_eq!(arr.get_slice(Some(1)..None), &[2, 3]);
+        assert_eq!(arr.get_slice(Some(1)..Some(2)), &[2]);
+        let mut vec = Vec::new();
+        assert!(vec.get_slice(Some(1)..Some(2)).is_empty());
+        vec.push(3);
+        assert_eq!(vec.get_slice(0..2), &[3]);
+        assert!(vec.get_slice(1..2).is_empty());
     }
 }

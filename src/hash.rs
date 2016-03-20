@@ -26,3 +26,17 @@ impl Hasher for Djb2 {
         }
     }
 }
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::hash::Hasher;
+
+    #[test]
+    fn test_correctness() {
+        let mut hasher = Djb2::default();
+        hasher.write(b"Hello, I'm Ticki.");
+        assert_eq!(hasher.finish(), 17086230315052214372);
+    }
+}

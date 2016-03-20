@@ -78,3 +78,17 @@ impl<T: Copy, I: Index<usize, Output = J>, J: Index<usize, Output = T>> GetPos f
         self[vec.y as usize][vec.x as usize]
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_vec2_ops() {
+        assert_eq!(Vec2::new(5, 6) + Vec2::new(5, 4), Vec2::new(10, 10));
+        assert_eq!(Vec2::new(5, 6) - Vec2::new(5, 4), Vec2::new(0, 2));
+
+        assert_eq!(Vec2::new(5, 6).norm(), 61);
+        assert_eq!(Vec2::new(1, 0).dist_sq(Vec2::new(2, 0)), 1);
+    }
+}

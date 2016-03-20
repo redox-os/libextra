@@ -104,25 +104,6 @@ impl<T> OptionalExt for Option<T> {
     }
 }
 
-/// Like `try!`, but accepting `Option`s instead.
-#[macro_export]
-macro_rules! try_some {
-    ($x:expr) => {
-        if let Some(x) = $x {
-            x
-        } else {
-            return None;
-        }
-    };
-    ($x:expr => $y:expr) => {
-        if let Some(x) = $x {
-            x
-        } else {
-            return $y;
-        }
-    };
-}
-
 /// A generalization of `try!()`.
 ///
 /// If this optional (`Option`-like) type is successful, return the inner value. If not, evaluate
@@ -135,6 +116,13 @@ macro_rules! try_some {
 /// will expand the statement inline, such that the current function will return.
 #[macro_export]
 macro_rules! maybe {
+    ($x:expr) => {
+        if let Some(x) = $x {
+            x
+        } else {
+            return None;
+        }
+    };
     ($a:expr => $b:expr) => {
         if let Some(x) = $a.into_iter().next() {
             x
@@ -142,4 +130,21 @@ macro_rules! maybe {
             $b
         }
     };
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_maybe() {
+        fn func() -> Option<u8> {
+            loop {
+                maybe!(None => break);
+            }
+
+            maybe!(None);
+            unreachable!();
+        }
+
+        assert!(func().is_none());
+    }
 }
