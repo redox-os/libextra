@@ -13,8 +13,10 @@ pub mod vec;
 /// Unreachability markers.
 pub mod unreachable;
 /// Extension for `HashMap`-like structures.
+#[cfg(not(target_os = "redox"))]
 pub mod map;
 /// Extension for `HashSet`-like structures.
+#[cfg(not(target_os = "redox"))]
 #[macro_use]
 pub mod set;
 /// Primitives for debugging.
