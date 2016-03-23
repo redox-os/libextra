@@ -20,9 +20,8 @@ impl<W: Write> WriteExt for W {
     }
 
     fn write_char(&mut self, c: char) -> io::Result<usize> {
-        let mut buf = [0; 4];
-        let n = c.encode_utf8(&mut buf).expect("Invalid UTF-8! This is a bug: Report it to the provider of this piece of software.");
-        self.write(&buf[..n])
+        let utf8 = c.encode_utf8();
+        self.write(utf8.as_slice())
     }
 }
 
