@@ -20,11 +20,8 @@ impl<W: Write> WriteExt for W {
     }
 
     fn write_char(&mut self, c: char) -> io::Result<usize> {
-        let mut utf8 = [0; 4];
-        match c.encode_utf8(&mut utf8) {
-            Some(len) => self.write(&utf8[0..len]),
-            None => unreachable!(),     // A buffer of length four is large enough to encode any char
-        }
+        let utf8 = c.encode_utf8();
+        self.write(utf8.as_slice())
     }
 }
 
