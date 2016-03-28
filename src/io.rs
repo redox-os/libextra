@@ -23,7 +23,7 @@ impl<W: Write> WriteExt for W {
         let mut utf8 = [0; 4];
         match c.encode_utf8(&mut utf8) {
             Some(len) => self.write(&utf8[0..len]),
-            None => panic!("<char>.encode_utf8 error!"),    // A buffer of length four is large enough to encode any char
+            None => unreachable!(),     // A buffer of length four is large enough to encode any char
         }
     }
 }
