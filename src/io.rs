@@ -20,11 +20,11 @@ impl<W: Write> WriteExt for W {
     }
 
     fn write_char(&mut self, c: char) -> io::Result<usize> {
-        let utf8 = c.encode_utf8();
-        self.write(utf8.as_slice())
+        self.write(c.encode_utf8().as_slice())
     }
 }
 
+/// Print error message to standard error, and exit with code, _1_.
 pub fn fail<'a>(s: &'a str, stderr: &mut io::Stderr) -> ! {
     let mut stderr = stderr.lock();
 

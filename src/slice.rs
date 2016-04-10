@@ -1,7 +1,8 @@
 extern crate collections;
 
-/// Convert this value into an `Option`.
+/// Types which can be converted to an `Option<T>`.
 pub trait AsOption<T> {
+    /// Convert this value into an `Option`.
     fn as_option(&self) -> Option<T>;
 }
 
@@ -21,7 +22,7 @@ use self::collections::range::RangeArgument;
 use std::ops::Range;
 use std::cmp;
 
-/// Bounded slice abstraction
+/// Bounded slice abstraction.
 ///
 /// # Code Migration
 ///
@@ -32,7 +33,9 @@ use std::cmp;
 /// `foo[..b]` => `foo.get_slice(..b)`
 ///
 pub trait GetSlice {
+    /// Panic safely get a slice of a value. When out of bound, the bound will be saturated.
     fn get_slice<T: AsOption<usize>, U: RangeArgument<T>>(&self, a: U) -> &Self;
+    /// Panic safely get a mutable slice of a value. When out of bound, the bound will be saturated.
     fn get_slice_mut<T: AsOption<usize>, U: RangeArgument<T>>(&mut self, a: U) -> &mut Self;
 }
 

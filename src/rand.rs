@@ -1,4 +1,6 @@
-/// A simple XOR-shift derived randomizer with a decent randomness quality.
+/// A LGC based, non-cryptographic, pseudo-random number generator with full cycle length (2^64 - 1).
+///
+/// To avoid hyperplanes, we apply a bijective function on the output.
 pub struct Randomizer {
     state: u64,
 }
@@ -7,7 +9,7 @@ impl Randomizer {
     /// Create a new randomizer from a seed.
     pub fn new(seed: u64) -> Randomizer {
         Randomizer {
-            state: seed,
+            state: seed.wrapping_add(0xDEADBEEFDEADBEEF),
         }
     }
 
@@ -27,9 +29,8 @@ impl Randomizer {
 
     /// Read a byte from the randomizer.
     pub fn read_u8(&mut self) -> u8 {
-        self.state ^= self.state.rotate_right(4).wrapping_add(0x25A45B35C4FD3DF2);
-        self.state ^= self.state >> 7;
-        self.state as u8
+        self.state = self.state.wrapping_mul(6364136223846793005).wrapping_add(1);
+        (self.state.wrapping_mul(1152921504735157271).rotate_right(2) ^ 0xFAB00105C0DE) as u8
     }
 
     /// Write a byte into the randomizer.
@@ -70,6 +71,6 @@ mod test {
             ones += rand.read_u8().count_ones() as u64;
         }
 
-        assert!(ones <= 400000000 + 5);
+        assert!(ones <= 400000000, "Bits are biased. {}% ones.", ones as f64 / 400000000.0);
     }
 }
