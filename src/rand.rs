@@ -63,6 +63,35 @@ mod test {
 
     #[ignore]
     #[test]
+    fn test_residue() {
+        fn fairness(n: u64) {
+            const TESTS: u64 = 10000000;
+            use std::mem;
+
+            let mut hits = vec![0; n as usize];
+            let mut rand = Randomizer::new(0);
+
+            for _ in 0..TESTS {
+                let mut buf = [0; 8];
+                rand.read(&mut buf);
+
+                unsafe {
+                    hits[(mem::transmute::<[u8; 8], u64>(buf) % n) as usize] += 1;
+                }
+            }
+
+            for &i in hits.iter() {
+                assert!(i < TESTS / n, "Residue divergence not low enough, n = {}, div = {}", n, i as f64 / TESTS as f64 * n as f64);
+            }
+        }
+
+        for i in 3..1000 {
+            fairness(i);
+        }
+    }
+
+    #[ignore]
+    #[test]
     fn bitstream_test() {
         let mut ones = 0u64;
         let mut rand = Randomizer::new(0);

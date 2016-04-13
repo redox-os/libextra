@@ -16,6 +16,9 @@ pub trait OptionalExt {
     /// Unwrap or abort the program with failed exit code and custom error message
     fn fail<'a>(self, err: &'a str, stderr: &mut io::Stderr) -> Self::Succ;
 
+    /// Consume an optional type, and write a warning to stderr if it is the "fail" value.
+    fn warn(self, stderr: &mut io::Stderr);
+
     /// An unwrapping where the fail-case is not checked and threaten as statical unreachable.
     unsafe fn unchecked_unwrap(self) -> Self::Succ;
 }
@@ -24,34 +27,39 @@ impl<T, U: Error> OptionalExt for Result<T, U> {
     type Succ = T;
 
     fn try(self, stderr: &mut io::Stderr) -> T {
-        let mut stderr = stderr.lock();
+        self.unwrap_or_else(|e| {
+            let mut stderr = stderr.lock();
 
-        match self {
-            Ok(succ) => succ,
-            Err(e) => {
-                // We ignore the results to avoid stack overflow (because of unbounded
-                // recursion).
-                let _ = stderr.write(b"error: ");
-                let _ = stderr.write(e.description().as_bytes());
-                let _ = stderr.write(b"\n");
-                let _ = stderr.flush();
-                process::exit(1);
-            },
-        }
+            // We ignore the results to avoid stack overflow (because of unbounded
+            // recursion).
+            let _ = stderr.write(b"error: ");
+            let _ = stderr.write(e.description().as_bytes());
+            let _ = stderr.write(b"\n");
+            let _ = stderr.flush();
+            process::exit(1);
+        })
     }
 
     fn fail<'a>(self, err: &'a str, stderr: &mut io::Stderr) -> T {
-        let mut stderr = stderr.lock();
+        self.unwrap_or_else(|_| {
+            let mut stderr = stderr.lock();
 
-        match self {
-            Ok(succ) => succ,
-            Err(_) => {
-                let _ = stderr.write(b"error: ");
-                let _ = stderr.write(err.as_bytes());
-                let _ = stderr.write(b"\n");
-                let _ = stderr.flush();
-                process::exit(1);
-            },
+            let _ = stderr.write(b"error: ");
+            let _ = stderr.write(err.as_bytes());
+            let _ = stderr.write(b"\n");
+            let _ = stderr.flush();
+            process::exit(1);
+        })
+    }
+
+    fn warn(self, stderr: &mut io::Stderr) {
+        if let Err(e) = self {
+            let mut stderr = stderr.lock();
+
+            let _ = stderr.write(b"warning: ");
+            let _ = stderr.write(e.description().as_bytes());
+            let _ = stderr.write(b"\n");
+            let _ = stderr.flush();
         }
     }
 
@@ -68,30 +76,33 @@ impl<T> OptionalExt for Option<T> {
     type Succ = T;
 
     fn try(self, stderr: &mut io::Stderr) -> T {
-        let mut stderr = stderr.lock();
+        self.unwrap_or_else(|| {
+            let mut stderr = stderr.lock();
 
-        match self {
-            Some(succ) => succ,
-            None => {
-                let _ = stderr.writeln(b"error: (no message)\n");
-                let _ = stderr.flush();
-                process::exit(1);
-            },
-        }
+            let _ = stderr.writeln(b"error: (no message)\n");
+            let _ = stderr.flush();
+            process::exit(1);
+        })
     }
 
     fn fail<'a>(self, err: &'a str, stderr: &mut io::Stderr) -> T {
-        let mut stderr = stderr.lock();
+        self.unwrap_or_else(|| {
+            let mut stderr = stderr.lock();
 
-        match self {
-            Some(succ) => succ,
-            None => {
-                let _ = stderr.write(b"error:");
-                let _ = stderr.write(err.as_bytes());
-                let _ = stderr.write(b"\n");
-                let _ = stderr.flush();
-                process::exit(1);
-            },
+            let _ = stderr.write(b"error:");
+            let _ = stderr.write(err.as_bytes());
+            let _ = stderr.write(b"\n");
+            let _ = stderr.flush();
+            process::exit(1);
+        })
+    }
+
+    fn warn(self, stderr: &mut io::Stderr) {
+        if self.is_none() {
+            let mut stderr = stderr.lock();
+
+            let _ = stderr.writeln(b"warning: (no message)\n");
+            let _ = stderr.flush();
         }
     }
 
