@@ -16,8 +16,9 @@ pub trait OptionalExt {
     /// Unwrap or abort the program with failed exit code and custom error message
     fn fail<'a>(self, err: &'a str, stderr: &mut io::Stderr) -> Self::Succ;
 
-    /// Consume an optional type, and write a warning to stderr if it is the "fail" value.
-    fn warn(self, stderr: &mut io::Stderr);
+    /// Consume an optional type, and write a warning to stderr if it is the "fail" value. If it is
+    /// the "success" value, return that. If not, return None.
+    fn warn(self, stderr: &mut io::Stderr) -> Option<Self::Succ>;
 
     /// An unwrapping where the fail-case is not checked and threaten as statical unreachable.
     unsafe fn unchecked_unwrap(self) -> Self::Succ;
@@ -52,8 +53,8 @@ impl<T, U: Error> OptionalExt for Result<T, U> {
         })
     }
 
-    fn warn(self, stderr: &mut io::Stderr) {
-        if let Err(e) = self {
+    fn warn(self, stderr: &mut io::Stderr) -> Option<T> {
+        if let Err(ref e) = self {
             let mut stderr = stderr.lock();
 
             let _ = stderr.write(b"warning: ");
@@ -61,6 +62,8 @@ impl<T, U: Error> OptionalExt for Result<T, U> {
             let _ = stderr.write(b"\n");
             let _ = stderr.flush();
         }
+
+        self.ok()
     }
 
     unsafe fn unchecked_unwrap(self) -> T {
@@ -97,13 +100,15 @@ impl<T> OptionalExt for Option<T> {
         })
     }
 
-    fn warn(self, stderr: &mut io::Stderr) {
+    fn warn(self, stderr: &mut io::Stderr) -> Option<T> {
         if self.is_none() {
             let mut stderr = stderr.lock();
 
             let _ = stderr.writeln(b"warning: (no message)\n");
             let _ = stderr.flush();
         }
+
+        self
     }
 
     unsafe fn unchecked_unwrap(self) -> T {
