@@ -126,21 +126,14 @@ pub trait OptionExt: OptionalExt {
     ///
     /// This takes a closure which returns a boolean. If true, nothing will change. If false, it
     /// will set the option to `None`.
-    fn filter<F>(&mut self, filter: F) where F: FnOnce(&Self::Succ) -> bool;
+    fn filter<F>(self, filter: F) -> Self where F: FnOnce(&Self::Succ) -> bool;
 }
 
 impl<T> OptionExt for Option<T> {
-    fn filter<F>(&mut self, filter: F) where F: FnOnce(&T) -> bool {
-        // Hack to get around the annoyance with matches, while waiting for MIR.
-        let res;
-
+    fn filter<F>(self, filter: F) -> Self where F: FnOnce(&T) -> bool {
         match self {
-            &mut Some(ref x) if !filter(x) => res = true,
-            _ => res = false,
-        }
-
-        if res {
-            *self = None;
+            Some(ref x) if !filter(x) => None,
+            _ => self,
         }
     }
 }
@@ -193,14 +186,7 @@ mod test {
 
     #[test]
     fn test_filter() {
-        let mut opt = Some(3);
-        opt.filter(|x| x & 1 == 0);
-
-        assert_eq!(opt, None);
-
-        let mut opt = Some(2);
-        opt.filter(|x| x & 1 == 0);
-
-        assert_eq!(opt, Some(2));
+        assert_eq!(Some(3).filter(|x| x & 1 == 0), None);
+        assert_eq!(Some(2).filter(|x| x & 1 == 0), Some(2));
     }
 }
