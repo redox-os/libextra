@@ -120,6 +120,31 @@ impl<T> OptionalExt for Option<T> {
     }
 }
 
+/// Extension for `Option<T>`.
+pub trait OptionExt: OptionalExt {
+    /// Filter this Option.
+    ///
+    /// This takes a closure which returns a boolean. If true, nothing will change. If false, it
+    /// will set the option to `None`.
+    fn filter<F>(&mut self, filter: F) where F: FnOnce(&Self::Succ) -> bool;
+}
+
+impl<T> OptionExt for Option<T> {
+    fn filter<F>(&mut self, filter: F) where F: FnOnce(&T) -> bool {
+        // Hack to get around the annoyance with matches, while waiting for MIR.
+        let res;
+
+        match self {
+            &mut Some(ref x) if !filter(x) => res = true,
+            _ => res = false,
+        }
+
+        if res {
+            *self = None;
+        }
+    }
+}
+
 /// A generalization of `try!()`.
 ///
 /// If this optional (`Option`-like) type is successful, return the inner value. If not, evaluate
@@ -150,6 +175,8 @@ macro_rules! maybe {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
     #[test]
     fn test_maybe() {
         fn func() -> Option<u8> {
@@ -162,5 +189,18 @@ mod test {
         }
 
         assert!(func().is_none());
+    }
+
+    #[test]
+    fn test_filter() {
+        let mut opt = Some(3);
+        opt.filter(|x| x & 1 == 0);
+
+        assert_eq!(opt, None);
+
+        let mut opt = Some(2);
+        opt.filter(|x| x & 1 == 0);
+
+        assert_eq!(opt, Some(2));
     }
 }
