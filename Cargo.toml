@@ -2,5 +2,11 @@
 name = "extra"
 version = "0.1.0"
 authors = ["Ticki <Ticki@users.noreply.github.com>"]
+description = "Extra stuff the standard library lacks of."
+repository = "https://github.com/redox-os/libextra"
+documentation = "https://docs.rs/crate/extra"
+license = "MIT"
+keywords = ["extras", "std", "common", "frequent", "handy"]
+exclude = ["target", "Cargo.lock"]
 
 [dependencies]
