@@ -20,7 +20,9 @@ impl<W: Write> WriteExt for W {
     }
 
     fn write_char(&mut self, c: char) -> io::Result<usize> {
-        self.write(c.encode_utf8().as_slice())
+        // FIXME: encode_utf8 method needs updating.
+        unimplemented!();
+        //self.write(c.encode_utf8().as_slice())
     }
 }
 
