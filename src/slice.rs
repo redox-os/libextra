@@ -34,14 +34,14 @@ use std::cmp;
 ///
 pub trait GetSlice {
     /// Panic safely get a slice of a value. When out of bound, the bound will be saturated.
-    fn get_slice<T: AsOption<usize>, U: RangeArgument<T>>(&self, a: U) -> &Self;
+    fn get_slice<T: Into<Option<usize>> + Copy, U: RangeArgument<T>>(&self, a: U) -> &Self;
     /// Panic safely get a mutable slice of a value. When out of bound, the bound will be saturated.
-    fn get_slice_mut<T: AsOption<usize>, U: RangeArgument<T>>(&mut self, a: U) -> &mut Self;
+    fn get_slice_mut<T: Into<Option<usize>> + Copy, U: RangeArgument<T>>(&mut self, a: U) -> &mut Self;
 }
 
-fn bound<T: AsOption<usize>, U: RangeArgument<T>>(len: usize, a: U) -> Range<usize> {
-    let start = cmp::min(a.start().and_then(|x| x.as_option()).unwrap_or(0), len);
-    let end = cmp::min(a.end().and_then(|x| x.as_option()).unwrap_or(len), len);
+fn bound<T: Into<Option<usize>> + Copy, U: RangeArgument<T>>(len: usize, a: U) -> Range<usize> {
+    let start = cmp::min(a.start().and_then(|x| (*x).into()).unwrap_or(0), len);
+    let end = cmp::min(a.end().and_then(|x| (*x).into()).unwrap_or(len), len);
 
     if start <= end {
         start..end
@@ -51,22 +51,22 @@ fn bound<T: AsOption<usize>, U: RangeArgument<T>>(len: usize, a: U) -> Range<usi
 }
 
 impl GetSlice for str {
-    fn get_slice<T: AsOption<usize>, U: RangeArgument<T>>(&self, a: U) -> &Self {
+    fn get_slice<T: Into<Option<usize>> + Copy, U: RangeArgument<T>>(&self, a: U) -> &Self {
         &self[bound(self.len(), a)]
     }
 
-    fn get_slice_mut<T: AsOption<usize>, U: RangeArgument<T>>(&mut self, a: U) -> &mut Self {
+    fn get_slice_mut<T: Into<Option<usize>> + Copy, U: RangeArgument<T>>(&mut self, a: U) -> &mut Self {
         let len = self.len();
         &mut self[bound(len, a)]
     }
 }
 
 impl<T> GetSlice for [T] {
-    fn get_slice<U: AsOption<usize>, V: RangeArgument<U>>(&self, a: V) -> &Self {
+    fn get_slice<U: Into<Option<usize>> + Copy, V: RangeArgument<U>>(&self, a: V) -> &Self {
         &self[bound(self.len(), a)]
     }
 
-    fn get_slice_mut<U: AsOption<usize>, V: RangeArgument<U>>(&mut self, a: V) -> &mut Self {
+    fn get_slice_mut<U: Into<Option<usize>> + Copy, V: RangeArgument<U>>(&mut self, a: V) -> &mut Self {
         let len = self.len();
         &mut self[bound(len, a)]
     }
