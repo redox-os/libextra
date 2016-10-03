@@ -1,23 +1,5 @@
 extern crate collections;
 
-/// Types which can be converted to an `Option<T>`.
-pub trait AsOption<T> {
-    /// Convert this value into an `Option`.
-    fn as_option(&self) -> Option<T>;
-}
-
-impl AsOption<usize> for usize {
-    fn as_option(&self) -> Option<usize> {
-        Some(*self)
-    }
-}
-
-impl AsOption<usize> for Option<usize> {
-    fn as_option(&self) -> Option<usize> {
-        *self
-    }
-}
-
 use self::collections::range::RangeArgument;
 use std::ops::Range;
 use std::cmp;
