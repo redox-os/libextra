@@ -1,11 +1,8 @@
 //! This crate contains various useful stuff, that libstd lacks of.
 
-#![feature(collections)]
-#![feature(collections_range)]
 #![feature(const_fn)]
 #![feature(core_intrinsics)]
 #![feature(stmt_expr_attributes)]
-#![feature(unicode)]
 
 #![warn(missing_docs)]
 
@@ -33,5 +30,3 @@ pub mod hash;
 pub mod io;
 /// Non-cryptographic pseudo-random number generators.
 pub mod rand;
-/// Panic-safe slicing.
-pub mod slice;
