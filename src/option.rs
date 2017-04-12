@@ -33,9 +33,7 @@ impl<T, U: Error> OptionalExt for Result<T, U> {
 
             // We ignore the results to avoid stack overflow (because of unbounded
             // recursion).
-            let _ = stderr.write(b"error: ");
-            let _ = stderr.write(e.description().as_bytes());
-            let _ = stderr.write(b"\n");
+            let _ = stderr.write_fmt(format_args!("error: {}\n", e));
             let _ = stderr.flush();
             process::exit(1);
         })
@@ -57,9 +55,7 @@ impl<T, U: Error> OptionalExt for Result<T, U> {
         if let Err(ref e) = self {
             let mut stderr = stderr.lock();
 
-            let _ = stderr.write(b"warning: ");
-            let _ = stderr.write(e.description().as_bytes());
-            let _ = stderr.write(b"\n");
+            let _ = stderr.write_fmt(format_args!("warning: {}\n", e));
             let _ = stderr.flush();
         }
 
