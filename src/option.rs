@@ -1,16 +1,18 @@
 use unreachable::unreachable;
 use io::WriteExt;
 
-use std::process;
-use std::error::Error;
+use std::env;
+use std::fmt::{Debug, Display};
 use std::io::{self, Write};
+use std::path::Path;
+use std::process;
 
 /// Extension for Option-like types
 pub trait OptionalExt {
     /// The "success" variant of this optional type.
     type Succ;
 
-    /// Unwrap or abort program with exit code
+    /// Unwrap or abort program with exit code 1.
     fn try(self, stderr: &mut io::Stderr) -> Self::Succ;
 
     /// Unwrap or abort the program with failed exit code and custom error message
@@ -20,11 +22,14 @@ pub trait OptionalExt {
     /// the "success" value, return that. If not, return None.
     fn warn(self, stderr: &mut io::Stderr) -> Option<Self::Succ>;
 
+    /// Unwrap or abort the program with exit code and the error type display message.
+    fn unwrap_or_exit(self, exit_status: i32) -> Self::Succ;
+
     /// An unwrapping where the fail-case is not checked and threaten as statical unreachable.
     unsafe fn unchecked_unwrap(self) -> Self::Succ;
 }
 
-impl<T, U: Error> OptionalExt for Result<T, U> {
+impl<T, E: Debug + Display> OptionalExt for Result<T, E> {
     type Succ = T;
 
     fn try(self, stderr: &mut io::Stderr) -> T {
@@ -60,6 +65,23 @@ impl<T, U: Error> OptionalExt for Result<T, U> {
         }
 
         self.ok()
+    }
+
+    fn unwrap_or_exit(self, exit_status: i32) -> T {
+        self.unwrap_or_else(|err| {
+            if let Some(arg) = env::args().next() {
+                if let Some(invoc) = Path::new(&arg).file_name() {
+                    eprintln!("{}: {}", invoc.to_string_lossy() , err);
+                    process::exit(exit_status);
+                } else {
+                    eprintln!("{}: {}", arg, err);
+                    process::exit(exit_status);
+                }
+            } else {
+                eprintln!("unrecoverable error: {}", err);
+                process::exit(exit_status);
+            }
+        })
     }
 
     unsafe fn unchecked_unwrap(self) -> T {
@@ -105,6 +127,23 @@ impl<T> OptionalExt for Option<T> {
         }
 
         self
+    }
+
+    fn unwrap_or_exit(self, exit_status: i32) -> T {
+        self.unwrap_or_else(|| {
+            if let Some(arg) = env::args().next() {
+                if let Some(invoc) = Path::new(&arg).file_name() {
+                    eprintln!("{}: unexpected None found. Exiting", invoc.to_string_lossy());
+                    process::exit(exit_status);
+                } else {
+                    eprintln!("{}: unexpected None found. Exiting", arg,);
+                    process::exit(exit_status);
+                }
+            } else {
+                eprintln!("Unexpected None found. Exiting");
+                process::exit(exit_status);
+            }
+        })
     }
 
     unsafe fn unchecked_unwrap(self) -> T {
