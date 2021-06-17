@@ -1,9 +1,5 @@
 //! This crate contains various useful stuff, that libstd lacks of.
 
-#![feature(const_fn)]
-#![feature(core_intrinsics)]
-#![feature(stmt_expr_attributes)]
-
 #![warn(missing_docs)]
 
 /// Extension of functionality for `Option`-like types.

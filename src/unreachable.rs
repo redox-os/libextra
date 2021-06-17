@@ -4,12 +4,10 @@
 /// will assume the call to be _statically unreachable_. Revoking this in reachable code is
 /// undefined behavior, and might result in various unsafe conditions. Hence, the `unsafe`.
 pub unsafe fn unreachable() -> ! {
-    use std::intrinsics::unreachable;
-
     #[cfg(debug)]
     unreachable!();
 
     #[cfg(not(debug))]
-    unreachable();
+    std::hint::unreachable_unchecked();
 }
 
